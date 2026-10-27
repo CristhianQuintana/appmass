@@ -147,11 +147,32 @@ class CustomerOrderScreen extends ConsumerWidget {
               ),
             const SizedBox(height: 8),
             for (final item in value.items)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: ProductArtwork(label: item.productName, size: 48),
-                title: Text(item.productName),
-                trailing: Text('${item.quantity}'),
+              Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  leading: ProductArtwork(
+                    label: item.category.isEmpty
+                        ? item.productName
+                        : item.category,
+                    imageUrl: item.imageUrl,
+                    size: 56,
+                  ),
+                  title: Text(
+                    item.productName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: MoneyText(item.lineTotalCents),
+                  trailing: Text(
+                    'x${item.quantity}',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
               ),
             const SizedBox(height: 8),
             Align(

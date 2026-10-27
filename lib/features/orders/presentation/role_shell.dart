@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_redirect.dart';
 import '../../../app/router/app_routes.dart';
 import '../../../app/theme/mass_colors.dart';
 import '../../../core/widgets/mass_loading.dart';
+import '../../../core/widgets/mass_logo.dart';
 import '../../authentication/application/session_controller.dart';
+import '../../authentication/domain/session_status.dart';
 import '../../customer/application/customer_cart.dart';
+import '../../customer/presentation/customer_cart_screen.dart';
+import '../../customer/presentation/fly_to_cart.dart';
 import '../../profile/application/profile_controller.dart';
 import '../../profile/domain/staff_profile.dart';
 import '../../profile/domain/staff_role.dart';
-import '../../simulation/demo_mode.dart';
 
 class RoleShell extends ConsumerWidget {
   const RoleShell({required this.role, required this.child, super.key});
@@ -22,80 +26,117 @@ class RoleShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider).asData?.value;
     final session = ref.watch(sessionControllerProvider);
-    if (profile == null || profile.role != role || !profile.isOperational) {
+    final isCustomer = role == StaffRole.customer;
+    final isGuest =
+        isCustomer && session.status == SessionStatus.signedOut;
+    if (!isGuest &&
+        (profile == null || profile.role != role || !profile.isOperational)) {
       return const MassLoading(message: 'Comprobando acceso');
     }
 
-    final path = GoRouterState.of(context).uri.path;
+    final route = GoRouterState.of(context);
+    final path = route.uri.path;
+    final categoryQuery = route.uri.queryParameters['categoria'];
     final destinations = _destinations(role);
     final selected = _selectedIndex(path, role);
 
-    final demo = ref.watch(demoModeProvider);
-    final cartCount = role == StaffRole.customer
+    final cartCount = isCustomer
         ? ref.watch(customerCartProvider).quantity
         : 0;
+    final browsingCategory =
+        isCustomer &&
+        path.startsWith('${AppRoutes.customerHome}/catalogo') &&
+        categoryQuery != null &&
+        categoryQuery.isNotEmpty;
+    final showBack =
+        !_isSectionRoot(path, role) || browsingCategory;
 
     return Scaffold(
+      endDrawer: isCustomer
+          ? Drawer(
+              width: MediaQuery.sizeOf(context).width * 0.92,
+              child: const SafeArea(child: CustomerCartScreen(asDrawer: true)),
+            )
+          : null,
       appBar: AppBar(
-        leading: _isSectionRoot(path, role)
-            ? null
-            : IconButton(
+        leading: showBack
+            ? IconButton(
                 tooltip: 'Volver',
-                onPressed: () => context.go(_backTarget(path, role)),
+                onPressed: () => context.go(
+                  browsingCategory
+                      ? '${AppRoutes.customerHome}/catalogo'
+                      : _backTarget(path, role),
+                ),
                 icon: const Icon(Icons.arrow_back),
+              )
+            : null,
+        title: isCustomer
+            ? const MassLogo(compact: true)
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    profile!.displayName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: MassColors.ink,
+                    ),
+                  ),
+                  Text(
+                    role.label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: MassColors.muted,
+                    ),
+                  ),
+                ],
               ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              profile.displayName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: MassColors.ink,
-              ),
-            ),
-            Text(
-              role.label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: MassColors.muted,
-              ),
-            ),
-          ],
-        ),
         actions: [
-          IconButton(
-            key: const Key('home-account'),
-            tooltip: 'Cuenta',
-            onPressed: () =>
-                _openAccount(context, ref, profile, session.identity?.email),
-            icon: const Icon(Icons.account_circle_outlined),
-          ),
+          if (isCustomer)
+            Builder(
+              builder: (buttonContext) => IconButton(
+                key: customerCartIconKey,
+                tooltip: 'Abrir carrito',
+                onPressed: () => Scaffold.of(buttonContext).openEndDrawer(),
+                icon: cartCount > 0
+                    ? Badge(
+                        label: Text('$cartCount'),
+                        child: const Icon(Icons.shopping_cart_outlined),
+                      )
+                    : const Icon(Icons.shopping_cart_outlined),
+              ),
+            ),
+          if (isGuest)
+            TextButton(
+              key: const Key('home-sign-in'),
+              onPressed: () => context.go(
+                loginWithNext(GoRouterState.of(context).uri.toString()),
+              ),
+              child: const Text('Ingresar'),
+            )
+          else
+            IconButton(
+              key: const Key('home-account'),
+              tooltip: 'Cuenta',
+              onPressed: () => _openAccount(
+                context,
+                ref,
+                profile!,
+                session.identity?.email,
+              ),
+              icon: const Icon(Icons.account_circle_outlined),
+            ),
         ],
       ),
       body: SafeArea(
         child: Column(
           children: [
-            if (demo)
-              const ColoredBox(
-                color: MassColors.yellow,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text(
-                      'Demostración local. Datos ficticios, sin conexión.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: MassColors.ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            if (isCustomer &&
+                !isGuest &&
+                route.uri.queryParameters['checkout'] == '1')
+              const _OpenCartAfterLogin(),
             Expanded(child: child),
           ],
         ),
@@ -110,18 +151,50 @@ class RoleShell extends ConsumerWidget {
               destinations: [
                 for (final destination in destinations)
                   NavigationDestination(
-                    icon: destination.path.endsWith('/carrito') && cartCount > 0
-                        ? Badge(
-                            label: Text('$cartCount'),
-                            child: Icon(destination.icon),
-                          )
-                        : Icon(destination.icon),
+                    icon: Icon(destination.icon),
                     label: destination.label,
                   ),
               ],
             ),
     );
   }
+}
+
+class _OpenCartAfterLogin extends StatefulWidget {
+  const _OpenCartAfterLogin();
+
+  @override
+  State<_OpenCartAfterLogin> createState() => _OpenCartAfterLoginState();
+}
+
+class _OpenCartAfterLoginState extends State<_OpenCartAfterLogin> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      openCustomerCartDrawer(context);
+      context.go(AppRoutes.customerHome);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
+
+/// Abre el carrito desde la derecha (desliza de derecha a izquierda).
+void openCustomerCartDrawer(BuildContext context) {
+  final scaffold = Scaffold.maybeOf(context);
+  if (scaffold != null && scaffold.hasEndDrawer) {
+    scaffold.openEndDrawer();
+    return;
+  }
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final next = Scaffold.maybeOf(context);
+    if (next != null && next.hasEndDrawer) {
+      next.openEndDrawer();
+    }
+  });
 }
 
 class _Destination {
@@ -181,11 +254,6 @@ List<_Destination> _destinations(StaffRole role) {
         icon: Icons.storefront,
       ),
       _Destination(
-        path: '$home/carrito',
-        label: 'Carrito',
-        icon: Icons.shopping_cart_outlined,
-      ),
-      _Destination(
         path: '$home/pedidos',
         label: 'Pedidos',
         icon: Icons.receipt_long,
@@ -213,11 +281,12 @@ int _selectedIndex(String path, StaffRole role) {
     return 0;
   }
   if (role == StaffRole.customer) {
-    if (path.startsWith('$home/catalogo') || path.contains('/producto/')) {
+    if (path.startsWith('$home/catalogo') ||
+        path.contains('/producto/') ||
+        path.startsWith('$home/carrito')) {
       return 1;
     }
-    if (path.startsWith('$home/carrito')) return 2;
-    if (path.startsWith('$home/pedidos') || path.contains('/pedido/')) return 3;
+    if (path.startsWith('$home/pedidos') || path.contains('/pedido/')) return 2;
     return 0;
   }
   return 0;
@@ -233,6 +302,9 @@ String _backTarget(String path, StaffRole role) {
   }
   if (role == StaffRole.customer && path.contains('/pedido/')) {
     return '$home/pedidos';
+  }
+  if (role == StaffRole.customer && path.startsWith('$home/carrito')) {
+    return '$home/catalogo';
   }
   return home;
 }

@@ -10,7 +10,6 @@ import '../../features/authentication/presentation/login_screen.dart';
 import '../../features/authentication/presentation/password_recovery_screen.dart';
 import '../../features/profile/application/profile_controller.dart';
 import '../../features/simulation/demo_mode.dart';
-import '../../features/customer/presentation/customer_cart_screen.dart';
 import '../../features/customer/presentation/customer_catalog_screen.dart';
 import '../../features/customer/presentation/customer_home_screen.dart';
 import '../../features/customer/presentation/customer_orders_screen.dart';
@@ -60,7 +59,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         sessionStatus: session.status,
         profileGate: gate,
         role: profile.asData?.value?.role,
-        location: state.uri.path,
+        location: state.uri.toString(),
       );
     },
     routes: [
@@ -183,7 +182,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: 'carrito',
-                builder: (context, state) => const CustomerCartScreen(),
+                redirect: (context, state) => AppRoutes.customerHome,
               ),
               GoRoute(
                 path: 'pedidos',

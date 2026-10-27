@@ -5,7 +5,6 @@ import '../../../app/theme/mass_colors.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/mass_button.dart';
 import '../../../core/widgets/mass_notice.dart';
-import '../../simulation/demo_mode.dart';
 import '../application/auth_providers.dart';
 import '../application/session_controller.dart';
 import '../../profile/application/profile_controller.dart';
@@ -27,7 +26,7 @@ class ConfigurationScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Configuración requerida',
+                    'No se pudo conectar',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: MassColors.ink,
@@ -40,19 +39,8 @@ class ConfigurationScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Crea env/dev.json a partir del ejemplo y ejecuta la aplicación con --dart-define-from-file=env/dev.json. Usa solo la clave pública del cliente.',
-                    style: TextStyle(color: MassColors.muted),
-                  ),
-                  const SizedBox(height: 24),
-                  MassButton(
-                    buttonKey: const Key('demo-enter'),
-                    label: 'Abrir demostración local',
-                    onPressed: () =>
-                        ref.read(demoModeProvider.notifier).enable(),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'La demostración usa datos ficticios en este dispositivo. No se conecta a un servidor ni representa a Tiendas MASS.',
+                    'Revisa tu conexión a internet e intenta de nuevo más tarde. '
+                    'Si el problema continúa, contacta al equipo de la tienda.',
                     style: TextStyle(color: MassColors.muted),
                   ),
                 ],
@@ -95,7 +83,7 @@ class UnauthorizedScreen extends ConsumerWidget {
                   MassNotice(
                     message: hasProfileError
                         ? userFacingMessage(profile.error)
-                        : 'Esta cuenta no tiene un perfil operativo habilitado. Un administrador debe asignar el rol antes de continuar.',
+                        : 'Esta cuenta aún no está habilitada. Contacta al soporte de la tienda para continuar.',
                   ),
                   const SizedBox(height: 16),
                   if (hasProfileError)

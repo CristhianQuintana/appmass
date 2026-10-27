@@ -25,7 +25,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
 
-    expect(find.text('Configuración requerida'), findsOneWidget);
+    expect(find.text('No se pudo conectar'), findsOneWidget);
     expect(find.text('Inicia sesión'), findsNothing);
   });
 

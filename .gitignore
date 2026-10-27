@@ -56,5 +56,12 @@ app.*.map.json
 !.env.example
 env/*.json
 !env/*.example
+env/db.password
 *.jks
 *.keystore
+/dist/
+
+# Scripts Node auxiliares de administración
+/node_modules/
+/package-lock.json
+/supabase/remote_bootstrap.sql

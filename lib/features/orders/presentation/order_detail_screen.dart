@@ -94,7 +94,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           Card(
             margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
-              leading: ProductArtwork(label: item.productName, size: 48),
+              leading: ProductArtwork(
+                label: item.category.isEmpty ? item.productName : item.category,
+                imageUrl: item.imageUrl,
+                size: 48,
+              ),
               title: Text(item.productName),
               subtitle: Text('${item.quantity}'),
               trailing: MoneyText(item.lineTotalCents),

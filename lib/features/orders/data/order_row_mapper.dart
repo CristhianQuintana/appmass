@@ -76,11 +76,22 @@ OrderItem _item(Map<String, dynamic> row) {
   if (name is! String || quantity is! int) {
     throw const ValidationFailure('Una línea del pedido es inválida.');
   }
+  var imageUrl = '';
+  var category = '';
+  final product = row['products'];
+  if (product is Map) {
+    final image = product['image_url'];
+    final cat = product['category'];
+    if (image is String) imageUrl = image;
+    if (cat is String) category = cat;
+  }
   return OrderItem(
     productName: name,
     quantity: quantity,
     unitPriceCents: readCents(row['unit_price_cents']),
     lineTotalCents: readCents(row['line_total_cents']),
+    imageUrl: imageUrl,
+    category: category,
   );
 }
 

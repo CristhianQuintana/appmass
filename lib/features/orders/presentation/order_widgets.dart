@@ -65,18 +65,6 @@ class MoneyText extends StatelessWidget {
   }
 }
 
-class SampleCatalogNotice extends StatelessWidget {
-  const SampleCatalogNotice({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'Catálogo de prueba. No son precios oficiales de Tiendas MASS.',
-      style: TextStyle(color: MassColors.muted, fontWeight: FontWeight.w600),
-    );
-  }
-}
-
 class OrderSummaryCard extends StatelessWidget {
   const OrderSummaryCard({required this.order, required this.onTap, super.key});
 
@@ -85,20 +73,25 @@ class OrderSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final first = order.items.isEmpty ? null : order.items.first;
+    final extra = order.items.length > 1 ? order.items.length - 1 : 0;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               ProductArtwork(
-                label: order.modality == OrderModality.delivery
-                    ? 'entrega'
-                    : 'abarrotes',
-                size: 56,
+                label: first?.category.isNotEmpty == true
+                    ? first!.category
+                    : (order.modality == OrderModality.delivery
+                          ? 'entrega'
+                          : 'abarrotes'),
+                imageUrl: first?.imageUrl ?? '',
+                size: 64,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -120,13 +113,25 @@ class OrderSummaryCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text(order.customerName),
+                    Text(
+                      first == null
+                          ? order.customerName
+                          : extra > 0
+                          ? '${first.productName} +$extra'
+                          : first.productName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: MassColors.ink),
+                    ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         Text(
                           modalityLabel(order.modality),
-                          style: const TextStyle(color: MassColors.muted),
+                          style: const TextStyle(
+                            color: MassColors.muted,
+                            fontSize: 12,
+                          ),
                         ),
                         const Spacer(),
                         MoneyText(order.totalCents),
@@ -135,6 +140,7 @@ class OrderSummaryCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const Icon(Icons.chevron_right, color: MassColors.muted),
             ],
           ),
         ),

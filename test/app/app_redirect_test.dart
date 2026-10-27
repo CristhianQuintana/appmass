@@ -43,10 +43,26 @@ void main() {
     );
   });
 
-  test('un usuario anónimo no permanece en una ruta protegida', () {
-    expect(redirect(location: AppRoutes.administratorHome), AppRoutes.login);
+  test('un invitado entra a la tienda y no a personal', () {
+    expect(redirect(location: AppRoutes.loading), AppRoutes.customerHome);
+    expect(redirect(location: AppRoutes.customerHome), isNull);
+    expect(
+      redirect(location: '${AppRoutes.customerHome}/catalogo'),
+      isNull,
+    );
+    expect(
+      redirect(location: '${AppRoutes.customerHome}/producto/abc'),
+      isNull,
+    );
+    expect(redirect(location: AppRoutes.administratorHome), AppRoutes.customerHome);
     expect(redirect(location: AppRoutes.login), isNull);
-    expect(redirect(location: AppRoutes.recovery), isNull);
+  });
+
+  test('un invitado debe iniciar sesión para ver pedidos', () {
+    expect(
+      redirect(location: '${AppRoutes.customerHome}/pedidos'),
+      loginWithNext('${AppRoutes.customerHome}/pedidos'),
+    );
   });
 
   test(
@@ -78,7 +94,7 @@ void main() {
     },
   );
 
-  test('cada rol llega solo a su inicio y no conserva el de otro', () {
+  test('cada área llega solo a su inicio y no conserva el de otro', () {
     expect(
       redirect(
         sessionStatus: SessionStatus.signedIn,
@@ -110,29 +126,49 @@ void main() {
       redirect(
         sessionStatus: SessionStatus.signedIn,
         profileGate: ProfileGate.ready,
-        role: StaffRole.courier,
-        location: AppRoutes.courierHome,
+        role: StaffRole.administrator,
+        location: AppRoutes.customerHome,
       ),
-      isNull,
+      AppRoutes.administratorHome,
     );
     expect(
       redirect(
         sessionStatus: SessionStatus.signedIn,
         profileGate: ProfileGate.ready,
-        role: StaffRole.administrator,
-        location: '${AppRoutes.administratorHome}/',
+        role: StaffRole.customer,
+        location: AppRoutes.login,
       ),
-      isNull,
+      AppRoutes.customerHome,
     );
   });
 
-  test('cerrar sesión devuelve cualquier ruta interna al ingreso', () {
+  test('cerrar sesión lleva a la tienda, no al login forzado', () {
     expect(
       redirect(
         sessionStatus: SessionStatus.signedOut,
         location: AppRoutes.courierHome,
       ),
-      AppRoutes.login,
+      AppRoutes.customerHome,
+    );
+  });
+
+  test('cancelar el ingreso vuelve a la tienda visible sin sesión', () {
+    expect(loginCancelTarget(null), AppRoutes.customerHome);
+    expect(
+      loginCancelTarget(Uri.encodeComponent(AppRoutes.customerHome)),
+      AppRoutes.customerHome,
+    );
+    expect(
+      loginCancelTarget(
+        Uri.encodeComponent('${AppRoutes.customerHome}/catalogo'),
+      ),
+      '${AppRoutes.customerHome}/catalogo',
+    );
+    expect(
+      loginCancelTarget(
+        Uri.encodeComponent('${AppRoutes.customerHome}/pedidos'),
+      ),
+      AppRoutes.customerHome,
     );
   });
 }

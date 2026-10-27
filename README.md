@@ -1,60 +1,54 @@
 # MASS Operaciones
 
-Aplicación Flutter para el ciclo operativo de pedidos de un minimarket: registro, preparación, asignación y entrega. El proyecto se trata como una solución independiente hasta que exista autorización para usar la marca, el catálogo o los sistemas de Tiendas MASS.
+Aplicación Flutter para el ciclo operativo de pedidos de un minimarket: registro, preparación, asignación y entrega. Incluye un apartado de cliente en demostración y, con Supabase configurado, contra la base real.
 
-Estado al 14 de octubre de 2026: el flujo operativo de los sprints 2 a 6 está en el código local y en migraciones SQL. No hay proyecto Supabase creado, así que esas reglas no se ejecutaron contra una base real. No hay commit ni repositorio remoto, y la aplicación no se ejecutó en un dispositivo Android.
+Estado al 22 de octubre de 2026: el código y las migraciones SQL están el flujo de personal, el catálogo de prueba, pedidos, entregas y el carrito del comprador. El repositorio remoto es [CristhianQuintana/appmass](https://github.com/CristhianQuintana/appmass). El proyecto Supabase de desarrollo es `kwygymkrlwthddjijdyr`. Hasta aplicar el SQL remoto, las tablas no existen en esa instancia.
 
 ## Qué hace hoy
 
-- Inicio y cierre de sesión contra Supabase Auth, cuando el entorno local está configurado.
-- El rol no se elige en la pantalla de acceso. Sale del perfil guardado en PostgreSQL.
-- Un usuario sin perfil, inactivo o con un rol desconocido no entra a las pantallas operativas.
-- La sesión se guarda cifrada con el almacén del sistema, no en texto plano.
-- Catálogo de prueba, registro de pedidos, preparación, asignación, mapa externo, resultado de entrega, resumen y personal. Los importes y los cambios de estado los confirma PostgreSQL.
+- Inicio y cierre de sesión contra Supabase Auth, cuando `env/dev.json` está configurado.
+- El rol no se elige en la pantalla de acceso. Sale del perfil en PostgreSQL.
+- Catálogo, pedidos, preparación, asignación, mapa externo, entrega, resumen y personal.
+- Apartado de cliente: categorías, catálogo, carrito (local y sincronizado por RPC) y seguimiento de pedidos propios.
+- Demostración local sin servidor, solo si no hay configuración pública.
 
 ## Requisitos
 
-- Flutter 3.47.4, canal stable, en `D:\Flutter`
-- Dart 3.13.3
-- Android SDK 36, con licencias aceptadas, para compilar Android
-- Un proyecto Supabase de desarrollo, separado de cualquier entorno real
+- Flutter 3.47.4 (`D:\Flutter`)
+- Proyecto Supabase de desarrollo
+- Clave pública (`sb_publishable_` o JWT `anon`). Nunca la `sb_secret_` en la app
 
-`flutter doctor` del 14 de octubre de 2026 reportó Android sin `cmdline-tools` y con licencias sin aceptar. No había un emulador ni un teléfono conectado. Windows, Chrome y Edge sí estaban disponibles.
-
-## Ejecutar en local
+## Ejecutar contra Supabase
 
 ```powershell
-flutter pub get
 copy env\dev.json.example env\dev.json
+# Completa SUPABASE_URL y SUPABASE_ANON_KEY
+D:\Flutter\bin\flutter.bat run -d chrome --release --web-port 7357 --dart-define-from-file=env/dev.json
 ```
 
-Edita `env/dev.json` con la URL `https` del proyecto y la clave pública (`anon` o `sb_publishable_`). No pongas la clave `service_role` ni una clave `sb_secret_`.
+Guía completa del esquema, RLS y provisión de usuarios: `docs/18-supabase-remoto.md`.
+
+## Aplicar la base (resumen)
 
 ```powershell
-flutter run --dart-define-from-file=env/dev.json
+powershell -ExecutionPolicy Bypass -File scripts\build_bootstrap_sql.ps1
+# Pega supabase/remote_bootstrap.sql en el SQL Editor del proyecto
+# o:
+$env:SUPABASE_DB_PASSWORD = "<Database Settings>"
+node scripts\apply_migrations.cjs
+$env:SUPABASE_SECRET = "<sb_secret_>"
+node scripts\provision_users.cjs
 ```
-
-Sin ese archivo la aplicación abre una pantalla de configuración y no intenta conectar. Desde ahí, **Abrir demostración local** recorre la interfaz con datos ficticios en el dispositivo. `env/dev.json` está ignorado por Git.
 
 ## Verificaciones
 
 ```powershell
-dart format --output=none --set-exit-if-changed .
-flutter analyze
-flutter test
+D:\Flutter\bin\flutter.bat analyze --no-pub
+D:\Flutter\bin\flutter.bat test
 ```
-
-El 14 de octubre de 2026, en esta máquina: `flutter analyze` no reportó issues y `flutter test` terminó con 37 pruebas aprobadas. Esa ejecución no incluye un dispositivo Android ni un proyecto Supabase real.
 
 ## Documentación
 
-La definición de producto, el roadmap y los planes de prueba están en `Document/`. Las decisiones de trabajo están en `docs/`. El modelo operativo de los sprints 2 a 6 está en `docs/17-modelo-operativo.md`. Las migraciones están en `supabase/migrations/`.
-
-## Pendiente antes de usarla con cuentas reales
-
-1. Crear el proyecto Supabase de desarrollo y aplicar las migraciones en orden.
-2. Desactivar el registro público y definir la política de contraseñas en Auth.
-3. Crear el primer administrador con `provision_staff_profile`, usando `service_role` fuera de la app.
-4. Comprobar las políticas con un administrador, un operador y un transportista distintos.
-5. Aceptar las licencias de Android y ejecutar el flujo en un dispositivo o emulador.
-6. Crear el repositorio Git, el primer commit y comprobar la ejecución de GitHub Actions.
+- Producto y roadmap: `Document/`
+- Decisiones técnicas: `docs/`
+- Migraciones: `supabase/migrations/`

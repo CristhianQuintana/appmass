@@ -59,8 +59,6 @@ class _NewOrderScreenState extends ConsumerState<NewOrderScreen> {
           title: 'Nuevo pedido',
           help: 'Selecciona los productos que formarán parte del pedido.',
         ),
-        const SizedBox(height: 8),
-        const SampleCatalogNotice(),
         const SizedBox(height: 16),
         SegmentedButton<OrderModality>(
           segments: const [
@@ -159,9 +157,11 @@ class _NewOrderScreenState extends ConsumerState<NewOrderScreen> {
                     width: 168,
                     child: ProductCard(
                       product: product,
-                      onAdd: () => ref
-                          .read(draftControllerProvider.notifier)
-                          .addProduct(product),
+                      onAdd: (_) async {
+                        ref
+                            .read(draftControllerProvider.notifier)
+                            .addProduct(product);
+                      },
                     ),
                   );
                 },
@@ -177,7 +177,11 @@ class _NewOrderScreenState extends ConsumerState<NewOrderScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
-                  ProductArtwork(label: line.product.category, size: 56),
+                  ProductArtwork(
+                    label: line.product.category,
+                    imageUrl: line.product.imageUrl,
+                    size: 56,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(

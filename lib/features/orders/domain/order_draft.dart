@@ -118,6 +118,31 @@ class OrderDraft {
     if (notes.trim().length > 400) return 'La observación es demasiado larga.';
     return null;
   }
+
+  /// Validación del checkout de cliente (datos de entrega completos).
+  String? validateCustomerCheckout() {
+    if (lines.isEmpty) return 'Agrega al menos un producto.';
+    if (customerName.trim().length < 3 || customerName.trim().length > 120) {
+      return 'Ingresa tu nombre completo.';
+    }
+    final phone = customerPhone.trim().replaceAll(RegExp(r'[\s-]'), '');
+    if (phone.length < 9 || phone.length > 15 || !RegExp(r'^\+?\d+$').hasMatch(phone)) {
+      return 'Ingresa un celular válido (9 dígitos o más).';
+    }
+    if (modality == OrderModality.delivery) {
+      final address = addressLine.trim();
+      if (address.length < 12 || address.length > 200) {
+        return 'Completa la dirección de entrega (calle, distrito y ciudad).';
+      }
+      if (addressReference.trim().length > 200) {
+        return 'La referencia es demasiado larga.';
+      }
+    }
+    if (notes.trim().length > 400) {
+      return 'Las indicaciones son demasiado largas.';
+    }
+    return null;
+  }
 }
 
 /// El cliente solo envía producto y cantidad. El precio lo resuelve el servidor.

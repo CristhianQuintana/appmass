@@ -16,13 +16,20 @@ class SupabaseCatalogRepository implements CatalogRepository {
     required bool includeInactive,
   }) {
     return guardRemote(() async {
-      final rows = await _client.rpc(
-        'list_catalog',
-        params: {
-          'p_query': sanitizeCatalogQuery(query),
-          'p_include_inactive': includeInactive,
-        },
-      );
+      final sanitized = sanitizeCatalogQuery(query);
+      // Invitados y clientes usan el listado público (solo activos).
+      final rows = includeInactive
+          ? await _client.rpc(
+              'list_catalog',
+              params: {
+                'p_query': sanitized,
+                'p_include_inactive': true,
+              },
+            )
+          : await _client.rpc(
+              'list_public_catalog',
+              params: {'p_query': sanitized},
+            );
       if (rows is! List) return const [];
       return [for (final row in rows) mapProductRow(_rowMap(row))];
     });
@@ -42,6 +49,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
           'p_unit_label': input.unitLabel.trim(),
           'p_price_cents': input.priceCents,
           'p_active': input.isActive,
+          'p_image_url': input.imageUrl.trim(),
         },
       );
       if (id is! String || id.isEmpty) throw const UnexpectedFailure();

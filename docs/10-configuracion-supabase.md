@@ -1,7 +1,7 @@
 # Configuración de Supabase
 
-Fecha: 14 de octubre de 2026  
-Estado: el proyecto de desarrollo no está creado. Esta guía no contiene una URL ni una clave reales.
+Fecha: 22 de octubre de 2026  
+Estado: hay un proyecto de desarrollo (`kwygymkrlwthddjijdyr`). Las claves reales viven solo en `env/dev.json` (gitignored) y en el panel. Ver también `docs/18-supabase-remoto.md`.
 
 ## Entornos
 

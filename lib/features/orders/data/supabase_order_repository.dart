@@ -19,7 +19,7 @@ class SupabaseOrderRepository implements OrderRepository {
       final rows = await _client
           .from('orders')
           .select(
-            'id, public_code, modality, status, customer_name, customer_phone, address_line, address_reference, notes, created_by, total_cents, version, created_at',
+            'id, public_code, modality, status, customer_name, customer_phone, address_line, address_reference, notes, created_by, total_cents, version, created_at, order_items(product_name, quantity, unit_price_cents, line_total_cents, products(image_url, category))',
           )
           .order('created_at', ascending: false)
           .limit(50);
@@ -33,7 +33,7 @@ class SupabaseOrderRepository implements OrderRepository {
       final row = await _client
           .from('orders')
           .select(
-            'id, public_code, modality, status, customer_name, customer_phone, address_line, address_reference, notes, created_by, total_cents, version, created_at, order_items(product_name, quantity, unit_price_cents, line_total_cents)',
+            'id, public_code, modality, status, customer_name, customer_phone, address_line, address_reference, notes, created_by, total_cents, version, created_at, order_items(product_name, quantity, unit_price_cents, line_total_cents, products(image_url, category))',
           )
           .eq('id', id)
           .maybeSingle();

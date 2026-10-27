@@ -9,6 +9,7 @@ class CatalogProduct {
     required this.priceCents,
     required this.isActive,
     required this.isSample,
+    this.imageUrl = '',
   });
 
   final String id;
@@ -20,6 +21,7 @@ class CatalogProduct {
   final int priceCents;
   final bool isActive;
   final bool isSample;
+  final String imageUrl;
 }
 
 class ProductInput {
@@ -32,6 +34,7 @@ class ProductInput {
     required this.unitLabel,
     required this.priceCents,
     required this.isActive,
+    this.imageUrl = '',
   });
 
   final String? id;
@@ -42,6 +45,7 @@ class ProductInput {
   final String unitLabel;
   final int priceCents;
   final bool isActive;
+  final String imageUrl;
 
   String? validate() {
     if (sku.trim().isEmpty || sku.trim().length > 40) {
@@ -60,6 +64,11 @@ class ProductInput {
       return 'Ingresa la unidad.';
     }
     if (priceCents < 0) return 'El precio no puede ser negativo.';
+    final image = imageUrl.trim();
+    if (image.length > 500) return 'La URL de la imagen es demasiado larga.';
+    if (image.isNotEmpty && !image.toLowerCase().startsWith('https://')) {
+      return 'La imagen debe usar una URL https.';
+    }
     return null;
   }
 }

@@ -125,6 +125,7 @@ class SimulationStore {
           priceCents: input.priceCents,
           isActive: input.isActive,
           isSample: true,
+          imageUrl: input.imageUrl.trim(),
         ),
       );
       return id;
@@ -142,6 +143,7 @@ class SimulationStore {
       priceCents: input.priceCents,
       isActive: input.isActive,
       isSample: current.isSample,
+      imageUrl: input.imageUrl.trim(),
     );
     return current.id;
   }
@@ -190,6 +192,8 @@ class SimulationStore {
           quantity: line.quantity,
           unitPriceCents: product.priceCents,
           lineTotalCents: lineTotal,
+          imageUrl: product.imageUrl,
+          category: product.category,
         ),
       );
     }

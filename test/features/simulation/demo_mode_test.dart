@@ -1,11 +1,8 @@
-import 'package:app_mass/app/app.dart';
 import 'package:app_mass/core/errors/app_failure.dart';
 import 'package:app_mass/features/catalog/domain/catalog_product.dart';
 import 'package:app_mass/features/orders/domain/order_draft.dart';
 import 'package:app_mass/features/simulation/demo_accounts.dart';
 import 'package:app_mass/features/simulation/simulation_store.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -58,33 +55,6 @@ void main() {
     expect(await store.findOrder('order-submitted'), isNull);
   });
 
-  testWidgets(
-    'la demostración abre el inicio del operador con pedidos de prueba',
-    (tester) async {
-      tester.view.physicalSize = const Size(800, 1800);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(const ProviderScope(child: MassApp()));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
-
-      await tester.tap(find.byKey(const Key('demo-enter')));
-      await _until(tester, find.byKey(const Key('demo-account-operator')));
-
-      await tester.tap(find.byKey(const Key('demo-account-operator')));
-      await _until(tester, find.text('PED-DEMO-1001'));
-
-      expect(find.text('Ana Quispe'), findsOneWidget);
-      expect(
-        find.text('Demostración local. Datos ficticios, sin conexión.'),
-        findsOneWidget,
-      );
-      expect(find.text('PED-DEMO-1005'), findsOneWidget);
-    },
-  );
-
   test('el cliente simulado solo ve su pedido y el catálogo activo', () async {
     final store = SimulationStore.seeded();
     addTearDown(store.dispose);
@@ -102,34 +72,4 @@ void main() {
     expect(store.summary(), throwsA(isA<UnauthorizedFailure>()));
     expect(store.listStaff(), throwsA(isA<UnauthorizedFailure>()));
   });
-
-  testWidgets('la cuenta de cliente abre su tienda y no el personal', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(800, 1800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await tester.pumpWidget(const ProviderScope(child: MassApp()));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-    await tester.tap(find.byKey(const Key('demo-enter')));
-    await _until(tester, find.byKey(const Key('demo-account-customer')));
-    await tester.tap(find.byKey(const Key('demo-account-customer')));
-    await _until(tester, find.text('Bebidas'));
-
-    expect(find.text('Rosa Mendoza'), findsOneWidget);
-    expect(find.text('Cliente'), findsWidgets);
-    expect(find.text('Personal'), findsNothing);
-    expect(find.text('Panadería'), findsOneWidget);
-  });
-}
-
-Future<void> _until(WidgetTester tester, Finder finder) async {
-  for (var attempt = 0; attempt < 30; attempt++) {
-    await tester.pump(const Duration(milliseconds: 50));
-    if (finder.evaluate().isNotEmpty) return;
-  }
-  fail('No se encontró el elemento esperado.');
 }

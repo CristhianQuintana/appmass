@@ -6,12 +6,16 @@ class OrderItem {
     required this.quantity,
     required this.unitPriceCents,
     required this.lineTotalCents,
+    this.imageUrl = '',
+    this.category = '',
   });
 
   final String productName;
   final int quantity;
   final int unitPriceCents;
   final int lineTotalCents;
+  final String imageUrl;
+  final String category;
 }
 
 class OrderEvent {

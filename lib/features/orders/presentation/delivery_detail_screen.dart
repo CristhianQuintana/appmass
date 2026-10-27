@@ -112,7 +112,11 @@ class _DeliveryDetailScreenState extends ConsumerState<DeliveryDetailScreen> {
         for (final item in order.items)
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: ProductArtwork(label: item.productName, size: 48),
+            leading: ProductArtwork(
+              label: item.category.isEmpty ? item.productName : item.category,
+              imageUrl: item.imageUrl,
+              size: 48,
+            ),
             title: Text(item.productName),
             trailing: Text('${item.quantity}'),
           ),

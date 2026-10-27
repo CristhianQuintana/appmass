@@ -49,10 +49,8 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
             children: [
               const MassSectionTitle(
                 title: 'Catálogo',
-                help: 'Busca un producto por nombre o código. Los precios de prueba no son oficiales.',
+                help: 'Busca un producto por nombre o código.',
               ),
-              const SizedBox(height: 8),
-              const SampleCatalogNotice(),
               const SizedBox(height: 12),
               TextField(
                 controller: _search,
@@ -90,22 +88,25 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   ),
                 );
               }
-              return GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.68,
+              return CatalogImagePrefetch(
+                products: products,
+                child: GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.72,
+                  ),
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+                    return ProductCard(
+                      product: product,
+                      onOpen: isAdmin ? () => _edit(product) : null,
+                    );
+                  },
                 ),
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  final product = products[index];
-                  return ProductCard(
-                    product: product,
-                    onOpen: isAdmin ? () => _edit(product) : null,
-                  );
-                },
               );
             },
           ),
@@ -147,6 +148,7 @@ class _ProductEditorState extends ConsumerState<_ProductEditor> {
   late final TextEditingController _category;
   late final TextEditingController _unit;
   late final TextEditingController _price;
+  late final TextEditingController _imageUrl;
   late bool _active;
   String? _message;
   bool _saving = false;
@@ -162,6 +164,7 @@ class _ProductEditorState extends ConsumerState<_ProductEditor> {
     _price = TextEditingController(
       text: product == null ? '' : _priceLabel(product.priceCents),
     );
+    _imageUrl = TextEditingController(text: product?.imageUrl ?? '');
     _active = product?.isActive ?? true;
   }
 
@@ -172,6 +175,7 @@ class _ProductEditorState extends ConsumerState<_ProductEditor> {
     _category.dispose();
     _unit.dispose();
     _price.dispose();
+    _imageUrl.dispose();
     super.dispose();
   }
 
@@ -185,8 +189,6 @@ class _ProductEditorState extends ConsumerState<_ProductEditor> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SampleCatalogNotice(),
-            const SizedBox(height: 12),
             TextField(
               controller: _sku,
               decoration: const InputDecoration(labelText: 'Código'),
@@ -213,6 +215,13 @@ class _ProductEditorState extends ConsumerState<_ProductEditor> {
                 decimal: true,
               ),
               decoration: const InputDecoration(labelText: 'Precio en soles'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _imageUrl,
+              decoration: const InputDecoration(
+                labelText: 'URL de imagen (https)',
+              ),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -252,6 +261,7 @@ class _ProductEditorState extends ConsumerState<_ProductEditor> {
       unitLabel: _unit.text,
       priceCents: cents,
       isActive: _active,
+      imageUrl: _imageUrl.text,
     );
     final validation = input.validate();
     if (validation != null) {
